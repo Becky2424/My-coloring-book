@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Coloring Book">
+<meta name="theme-color" content="#b793e0">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>My Adult Coloring Book</title>
+<style>
+:root{--bg:#f6f1e9;--card:#fffdf9;--ink:#3b3228;--mut:#8a7d6e;--acc:#7a4fa3;--line:#e3d9c9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a17;--card:#2a2622;--ink:#f1e9dd;--mut:#a89c8c;--acc:#b793e0;--line:#42392f}}
+:root[data-theme="dark"]{--bg:#1d1a17;--card:#2a2622;--ink:#f1e9dd;--mut:#a89c8c;--acc:#b793e0;--line:#42392f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+body{display:flex;flex-direction:column;align-items:center;min-height:100%;padding:10px 12px 18px}
+h1{font-size:1.35rem;margin:6px 0 2px;letter-spacing:.5px;text-align:center}
+.sub{color:var(--mut);font-size:.85rem;margin-bottom:8px;text-align:center}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin:5px 0;max-width:760px}
+button,label.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 14px;border-radius:999px;cursor:pointer;touch-action:manipulation}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tabs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;max-width:100%;padding:2px}
+.tabs button{white-space:nowrap}
+#paper{background:#fff;border-radius:14px;border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.12);width:min(100%,calc(100dvh - 300px),720px);min-width:280px;aspect-ratio:1;touch-action:none;user-select:none;-webkit-user-select:none;margin:8px 0}
+#paper path{stroke:#2b2b2b;stroke-width:1.6;stroke-linejoin:round}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line);padding:0}
+.sw.sel{box-shadow:0 0 0 3px var(--acc);transform:scale(1.1)}
+input[type=color]{width:42px;height:42px;border:none;background:none;padding:0}
+.pal button{font-size:.8rem;padding:6px 11px}
+</style></head><body>
+<h1>🎨 My Adult Coloring Book</h1>
+<div class="sub">Tap a space to fill it, or drag your Apple Pencil across shapes to color them in.</div>
+<div class="row tabs" id="tabs"></div>
+<svg id="paper" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="row pal" id="pals"></div>
+<div class="row" id="swatches"></div>
+<div class="row">
+<button id="undo">↩︎ Undo</button>
+<button id="erase">Eraser</button>
+<label class="btn">Custom <input type="color" id="custom" value="#e07a5f" style="vertical-align:middle;width:26px;height:22px"></label>
+<button id="pencil">✏️ Pencil only</button>
+<button id="clear">Clear page</button>
+</div>
+<script>
+const C=300,P=(r,a)=>[C+r*Math.cos(a),C+r*Math.sin(a)],f=n=>n.toFixed(1),T=Math.PI*2;
+const pt=(r,a)=>P(r,a).map(f).join(' ');
+const circle=r=>`M${C-r} ${C}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
+const sector=(r1,r2,a1,a2)=>`M${pt(r2,a1)}A${r2} ${r2} 0 0 1 ${pt(r2,a2)}L${pt(r1,a2)}A${r1} ${r1} 0 0 0 ${pt(r1,a1)}Z`;
+const petal=(r1,r2,a,w)=>{const rc=(r1+r2)/2;return `M${pt(r1,a)}Q${pt(rc,a-w)} ${pt(r2,a)}Q${pt(rc,a+w)} ${pt(r1,a)}Z`};
+
+const cc=(x,y,r)=>`M${f(x-r)} ${f(y)}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
+const pages=[
+{name:'Mandala',make(){const d=[],R=[32,70,110,155,205,255,298],N=[8,12,16,16,24,24];
+ R.slice(0,-1).forEach((r,i)=>{const n=N[i],s=T/n,o=i%2?s/2:0;for(let k=0;k<n;k++)d.push(sector(r,R[i+1],o+k*s,o+(k+1)*s))});
+ d.push(circle(32));return d}},
+{name:'Bloom',make(){const d=[circle(298)];
+ [[130,292,12,0,.33],[80,215,12,T/24,.3],[45,130,12,0,.4]].forEach(([r1,r2,n,o,w])=>{for(let k=0;k<n;k++)d.push(petal(r1,r2,o+k*T/n,w))});
+ for(let k=0;k<24;k++){const a=k*T/24;d.push(`M${pt(262,a-.05)}L${pt(292,a)}L${pt(262,a+.05)}Z`)}
+ d.push(circle(40));return d}},
+{name:'Sunburst',make(){const d=[],n=16,s=T/n,h=s/2,R=[40,100,160,220,280,300];
+ for(let i=0;i<R.length-1;i++){const o=i%2?h:0;for(let k=0;k<n;k++){const a=o+k*s;
+ d.push(`M${pt(R[i],a)}L${pt(R[i+1],a+h)}L${pt(R[i],a+s)}Z`);
+ d.push(`M${pt(R[i+1],a+h)}L${pt(R[i+1],a+s+h)}L${pt(R[i],a+s)}Z`)}}
+ for(let k=0;k<n;k++)d.push(`M${C} ${C}L${pt(40,k*s)}L${pt(40,(k+1)*s)}Z`);return d}},
+{name:'Hex Tiles',make(){const d=[],R=68,h=Math.sqrt(3)*R;
+ for(let c=-1;c<9;c++)for(let r=-1;r<9;r++){const cx=c*1.5*R,cy=r*h+(c%2?h/2:0);
+ for(let k=0;k<6;k++){const a=k*Math.PI/3,b=a+Math.PI/3;
+ d.push(`M${f(cx)} ${f(cy)}L${f(cx+R*Math.cos(a))} ${f(cy+R*Math.sin(a))}L${f(cx+R*Math.cos(b))} ${f(cy+R*Math.sin(b))}Z`)}}return d}},
+{name:'Quilt',make(){const d=[],s=100,m=s/2;
+ for(let i=0;i<6;i++)for(let j=0;j<6;j++){const x=i*s,y=j*s;
+ d.push(`M${x} ${y}h${m}l${-m} ${m}Z`,`M${x+s} ${y}v${m}l${-m} ${-m}Z`,`M${x+s} ${y+s}h${-m}l${m} ${-m}Z`,`M${x} ${y+s}v${-m}l${m} ${m}Z`,
+ `M${x+m} ${y}L${x+s} ${y+m}L${x+m} ${y+s}L${x} ${y+m}Z`)}return d}}
+,
+{name:'Rose Window',make(){const d=[cc(C,C,298)];for(let k=0;k<12;k++){const[x,y]=P(215,k*T/12);[62,44,26].forEach(r=>d.push(cc(x,y,r)))}for(let k=0;k<6;k++){const[x,y]=P(105,k*T/6+T/12);[52,36,20].forEach(r=>d.push(cc(x,y,r)))}d.push(cc(C,C,40));return d}},
+{name:'Zen Circles',make(){const d=[],s=150;for(let i=0;i<4;i++)for(let j=0;j<4;j++){const x=i*s,y=j*s;d.push(`M${x} ${y}h${s}v${s}h${-s}Z`);[70,54,38,22,8].forEach(r=>d.push(cc(x+75,y+75,r)))}return d}},
+{name:'Cubes',make(){const d=[],R=68,h=Math.sqrt(3)*R;for(let c=-1;c<9;c++)for(let r=-1;r<9;r++){const cx=c*1.5*R,cy=r*h+(c%2?h/2:0),v=k=>[cx+R*Math.cos(k*Math.PI/3),cy+R*Math.sin(k*Math.PI/3)].map(f).join(' ');for(const k of[0,2,4])d.push(`M${f(cx)} ${f(cy)}L${v(k)}L${v(k+1)}L${v(k+2)}Z`)}return d}},
+{name:'Waves',make(){const d=[];for(let j=0;j<22;j++)for(let i=-1;i<8;i++){const x=i*100+(j%2?50:0),y=j*28;[50,38,26,14].forEach(r=>d.push(cc(x,y,r)))}return d}},
+{name:'Star Medallion',make(){const d=[cc(C,C,298)],star=(R,q,n,o)=>{const p=[];for(let k=0;k<2*n;k++)p.push(pt(k%2?R*q:R,o+k*Math.PI/n));return 'M'+p.join('L')+'Z'};[[290,.62,12,0],[225,.6,12,T/24],[170,.55,8,0],[120,.55,8,T/16],[75,.5,6,0]].forEach(s=>d.push(star(...s)));d.push(cc(C,C,28));return d}},
+{name:'Honeycomb',make(){const d=[],R=62,h=Math.sqrt(3)*R;for(let c=-1;c<10;c++)for(let r=-1;r<9;r++){const cx=c*1.5*R,cy=r*h+(c%2?h/2:0);[1,.62,.28].forEach(s=>{const p=[];for(let k=0;k<6;k++)p.push([cx+R*s*Math.cos(k*Math.PI/3),cy+R*s*Math.sin(k*Math.PI/3)].map(f).join(' '));d.push('M'+p.join('L')+'Z')})}return d}}
+];
+const palettes={
+'Sunset':['#ff6b35','#f7931e','#ffc857','#e63946','#c1121f','#7b2d8e','#ff8fab','#4a1942'],
+'Ocean':['#03045e','#0077b6','#00b4d8','#90e0ef','#48cae4','#2a9d8f','#caf0f8','#264653'],
+'Forest':['#1b4332','#2d6a4f','#52b788','#95d5b2','#d8f3dc','#8a6f47','#bc6c25','#dda15e'],
+'Pastel':['#ffd6e0','#ffe5b4','#fdfd96','#c8f7c5','#bde0fe','#d7c6f5','#ffc8dd','#e2f0cb'],
+'Jewel':['#9b1d64','#5f0f8c','#1f3a93','#087f5b','#d4a017','#b5179e','#0b6e8a','#7a1f1f'],
+'Earth':['#6f4e37','#a47148','#d4a373','#e9d8a6','#ccd5ae','#8d99ae','#606c38','#bb4430'],
+'Neon':['#ff006e','#fb5607','#ffbe0b','#8ac926','#00f5d4','#3a86ff','#8338ec','#f15bb5'],
+'Berry':['#590d22','#800f2f','#a4133c','#c9184a','#ff4d6d','#ff758f','#ffb3c1','#fff0f3'],
+'Grayscale':['#111111','#333333','#555555','#777777','#999999','#bbbbbb','#dddddd','#f2f2f2']};
+
+const $=id=>document.getElementById(id),svg=$('paper');
+let page=0,pal='Sunset',color=palettes[pal][0],eraser=false,penOnly=false,state=[],hist=[],stroke=null;
+const key=()=>'coloring:'+pages[page].name;
+const load=()=>{try{state=JSON.parse(localStorage.getItem(key())||'{}')}catch(e){state={}}};
+const save=()=>{try{localStorage.setItem(key(),JSON.stringify(state))}catch(e){}};
+
+function draw(){const d=pages[page].make();
+ svg.innerHTML=d.map((p,i)=>`<path data-i="${i}" d="${p}" fill="${state[i]||'#fff'}"/>`).join('')}
+function tabs(){$('tabs').innerHTML=pages.map((p,i)=>`<button class="${i==page?'on':''}" data-p="${i}">${p.name}</button>`).join('')}
+function pals(){$('pals').innerHTML=Object.keys(palettes).map(n=>`<button class="${n==pal?'on':''}" data-n="${n}">${n}</button>`).join('');
+ $('swatches').innerHTML=palettes[pal].map(c=>`<button class="sw ${!eraser&&c==color?'sel':''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
+ $('erase').classList.toggle('on',eraser)}
+function openPage(i){page=i;hist=[];load();draw();tabs()}
+
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b)openPage(+b.dataset.p)};
+$('pals').onclick=e=>{const b=e.target.closest('button');if(b){pal=b.dataset.n;color=palettes[pal][0];eraser=false;pals()}};
+$('swatches').onclick=e=>{const b=e.target.closest('button');if(b){color=b.dataset.c;eraser=false;pals()}};
+$('custom').oninput=e=>{color=e.target.value;eraser=false;pals()};
+$('erase').onclick=()=>{eraser=!eraser;pals()};
+$('pencil').onclick=e=>{penOnly=!penOnly;e.currentTarget.classList.toggle('on',penOnly)};
+$('undo').onclick=()=>{const s=hist.pop();if(!s)return;s.reverse().forEach(([i,prev])=>{prev==='#fff'?delete state[i]:state[i]=prev;svg.children[i].setAttribute('fill',prev)});save()};
+$('clear').onclick=()=>{if(confirm('Clear this page?')){state={};hist=[];draw();save()}};
+
+function paint(e){const el=document.elementFromPoint(e.clientX,e.clientY);
+ if(!el||el.tagName!=='path'||el.parentNode!==svg)return;
+ const i=+el.dataset.i,c=eraser?'#fff':color,prev=state[i]||'#fff';
+ if(prev===c)return;stroke.push([i,prev]);
+ c==='#fff'?delete state[i]:state[i]=c;el.setAttribute('fill',c)}
+svg.addEventListener('pointerdown',e=>{if(penOnly&&e.pointerType==='touch')return;
+ e.preventDefault();svg.setPointerCapture(e.pointerId);stroke=[];paint(e)});
+svg.addEventListener('pointermove',e=>{if(stroke){e.preventDefault();paint(e)}});
+const end=()=>{if(stroke&&stroke.length){hist.push(stroke);save()}stroke=null};
+svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+document.addEventListener('gesturestart',e=>e.preventDefault());
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+pals();openPage(0);
+</script></body></html>
